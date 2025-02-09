@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "awGbEtYbHOcz2w/nwHbBZYwib6g75xKRg6SMnIepu4w=",
+  "Source": "INotificationManagementSystem",
+  "BasePath": "_content/INotificationManagementSystem",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}
