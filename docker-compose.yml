@@ -1,0 +1,71 @@
+services:
+  order-service:
+    container_name: order
+    build: ./IOrderManagementSystem/IOrderManagementSystem
+    ports:
+      - "5000:8080"
+    networks:
+      - kafka-network
+      - sql-network
+    depends_on:
+      - kafka-service
+      - sql-service
+    command: ["sh", "-c", "while ! nc -z sqldb 1433; do sleep 1; done; dotnet ef database update && dotnet run"]
+    restart: always
+
+  notification-service:
+    container_name: notification
+    build: ./INotificationManagementSystem/INotificationManagementSystem
+    ports:
+      - "5001:8080"
+    networks:
+      - kafka-network
+    depends_on:
+      - kafka-service
+    restart: always
+
+  kafka-service:
+    image: "apache/kafka"
+    container_name: kafkabroker
+    ports:
+      - "9092:9092"
+    networks:
+      - kafka-network
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafkabroker:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_CREATE_TOPICS: "order-created:1:1"
+    restart: always
+
+  sql-service:
+    image: "mcr.microsoft.com/mssql/server:2022-latest"
+    container_name: sqldb
+    ports:
+      - "1433:1433"
+    networks:
+      - sql-network
+    volumes:
+      - sql-volume:/var/opt/mssql
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Password
+      - MSSQL_PID=Evaluation
+      - MSSQL_DATABASE=OrderServiceDb
+    restart: always
+
+networks:
+  kafka-network:
+  sql-network:
+
+volumes:
+  sql-volume:
